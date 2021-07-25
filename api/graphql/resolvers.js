@@ -19,7 +19,9 @@ const resolvers = {
     },
 
     Mutation: {
-
+        SignUp: async (parent, args) => {
+            
+        }
     }
 }
 
