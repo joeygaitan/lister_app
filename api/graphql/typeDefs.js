@@ -1,14 +1,5 @@
 const { gql } = require("apollo-server-express");
 
-table.increments('id');
-      table.string('email').notNullable();
-      table.string('password').notNullable();
-      table.integer('age').notNullable();
-      table.enu('gender', ['male', 'female', 'trans', 'non-binary']).defaultTo('non-binary');
-      table.enu('status', ['away', 'offline', 'online']).defaultTo('offline');
-table.string('bio');
-table.timestamps(true,true);
-
 const typeDefs = gql`
     enum Gender {
         male
@@ -32,7 +23,7 @@ const typeDefs = gql`
         age: Int!
         gender: Gender
         status: Status
-        friends_can_see_private
+        bio: String
     }
 `;
 
