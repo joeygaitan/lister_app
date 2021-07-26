@@ -6,7 +6,7 @@ exports.up = function(knex) {
       table.string('username', 16).unique().notNullable();
       table.string('password').notNullable();
       table.integer('age').defaultTo(18);
-      table.enu('gender', ['male', 'female', 'trans', 'non-binary']).defaultTo('non-binary');
+      table.enu('gender', ['male', 'female', 'trans', 'nonbinary']).defaultTo('nonbinary');
       table.enu('status', ['away', 'offline', 'online']).defaultTo('offline');
       table.string('bio');
       table.timestamps(true,true);

@@ -1,23 +1,20 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
-    enum Gender 
-    {
+    enum Gender {
         male
         female
         trans
-        non-binary
+        nonbinary
     }
 
-    enum Status
-    {
+    enum Status {
         away
         offline
         online
     }
 
-    type User 
-    {
+    type User {
         id: ID!
         username: String!
         email: String!
@@ -27,21 +24,18 @@ const typeDefs = gql`
         bio: String
     }
 
-    type Auth
-    {
+    type Auth {
         token: ID!
         user: User
     }
 
-    type Query 
-    {
+    type Query {
         GetSelf: User
     } 
 
-    type Mutation 
-    {
-        Login(username: String!, password: String!) : Auth
-        SignUp(email: String!, username: String!, password: String!) : Auth
+    type Mutation {
+        Login(username: String!, password: String!): Auth
+        SignUp(email: String!, username: String!, password: String!): Auth
     }
 `;
 
