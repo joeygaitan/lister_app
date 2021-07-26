@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt')
 require('dotenv').config()
 
 module.exports = {
@@ -19,6 +20,7 @@ module.exports = {
         try 
         {
             const { data } = jwt.verify(token, secret, { maxAge: process.env.EXPIRATION })
+            delete data.password;
             req.user = data
         }
         catch
