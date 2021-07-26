@@ -5,9 +5,9 @@ module.exports = {
     Authenticate: function ({ req }) 
     {
         let token = req.body.token || req.query.token || req.headers.authorization;
-
         
-        if (req.headers.authorization) {
+        if (req.headers.authorization) 
+        {
             token = token.split(' ').pop().trim();
         }
 
@@ -25,6 +25,8 @@ module.exports = {
         {
             console.log("Wrong token :/")
         }
+
+        return req;
     },
 
     CreateToken: function ({username, email, id})
