@@ -1,20 +1,25 @@
 const db = require("../db/knex");
 const bcrypt = require('bcrypt')
+const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
+const { tryCatcher } = require("../utils/errorHandling")
 
 const resolvers = {
     Query: {
         GetSelf: async (parent, args, context) => {
             if (context.user) {
+                context
                 try {
                     const data = await db('user')
-                    .select('username, gender', 'bio', 'email', 'gender', 'status', 'age')
+                    .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age')
                     .where('id', context.id)
+                    .first()
 
+                    console.log(data)
                     return data;
                 }
                 catch {
-                    return ("failed to find user. Context failed failed to find the user :/");
+                    throw new AuthenticationError('not logged in');
                 }
             }
         } 
@@ -22,9 +27,10 @@ const resolvers = {
 
     Mutation: {
         SignUp: async (parent, args) => {
-            args.password = await bcrypt.hash(this.password, 10);
+            args.password = await bcrypt.hash(args.password, 10);
             const user = await db("user")
             .insert(args)
+            .first()
             
             const token = CreateToken(user)
 
@@ -32,31 +38,20 @@ const resolvers = {
         },
 
         Login: async (parent, { username, password }) => {
-            try
-            {
-                const user = await db('user')
-                .select('username, gender', 'bio', 'email', 'gender', 'status', 'age')
-                .where('username', username)
 
-                try
-                {
-                    const check = await bcrypt.compare(password, user.password)
-                    if (check)
-                    {
-                        const token = await CreateToken(user)
-    
-                        return { token, user }
-                    }
-                }
-                catch
-                {
-                    console.error("password doesn't match")
-                }
+            const [user, error] = await tryCatcher(db('user')
+            .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age', 'password')
+            .where('username', username)
+            .first(), "failed to find user")
+            
+            const [check, error1] = await tryCatcher(bcrypt.compare(password, user.password), "failed to compare passwords")
 
-            }
-            catch
+            if (check)
             {
-                console.error("failed to login....");
+                const token = CreateToken(user)
+                delete user.password
+
+                return { token, user }
             }
         }
     }
