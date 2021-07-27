@@ -8,11 +8,10 @@ const resolvers = {
     Query: {
         GetSelf: async (parent, args, context) => {
             if (context.user) {
-                context
                 try {
                     const data = await db('user')
                     .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age')
-                    .where('id', context.id)
+                    .where('id', context.user.id)
                     .first()
 
                     console.log(data)
