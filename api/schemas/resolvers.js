@@ -14,7 +14,6 @@ const resolvers = {
                     .where('id', context.user.id)
                     .first()
 
-                    console.log(data)
                     return data;
                 }
                 catch {
@@ -59,9 +58,7 @@ const resolvers = {
             if (check)
             {
                 const token = CreateToken(user)
-                console.log(token, "here")
                 delete user.password
-                console.log(token, user)
                 return { token, user }
             }
         }
