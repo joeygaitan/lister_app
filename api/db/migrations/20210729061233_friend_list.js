@@ -1,5 +1,3 @@
-const e = require("express");
-
 exports.up = function(knex) {
     return knex.schema.createTable('friend_list', (table) => {
         table.increments('id')

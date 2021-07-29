@@ -3,20 +3,23 @@ const db = require('../db/knex')
 
 const passwordHasher = async (password) => {
     const letNewPassword = await bcrypt.hash(password, 10);
-    
-    return password;
+    console.log(letNewPassword)
+    return letNewPassword;
 }
 
 const comparePassword = async (username, password) => {
     let user = await db('user')
     .where('username', username)
-    .select('password')
     .first()
+
+    console.log(user)
 
     let check = await bcrypt.compare(password, user.password)
 
     return check;
 }
 
-module.exports = { passwordHasher, comparePassword };
+console.log(passwordHasher("1234"))
+
+// module.exports = { passwordHasher, comparePassword };
 
