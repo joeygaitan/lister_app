@@ -8,13 +8,13 @@ const { typeDefs, resolvers } = require("./schemas")
 const { Authenticate } = require('./utils/authentication')
 
 const port = process.env.PORT || 5000
+const app = express();
 
 const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: Authenticate
 })
-const app = express();
 
 server.applyMiddleware({ app })
 

@@ -1,6 +1,8 @@
 const db = require("../db/knex");
 const bcrypt = require('bcrypt')
+const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
+const { tryCatcher } = require("../utils/errorHandling")
 
 const resolvers = {
     Query: {
@@ -8,55 +10,59 @@ const resolvers = {
             if (context.user) {
                 try {
                     const data = await db('user')
-                    .select('username, gender', 'bio', 'email', 'gender', 'status', 'age')
-                    .where('id', context.id)
+                    .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age')
+                    .where('id', context.user.id)
+                    .first()
 
+                    console.log(data)
                     return data;
                 }
                 catch {
-                    return ("failed to find user. Context failed failed to find the user :/");
+                    throw new AuthenticationError('not logged in');
                 }
             }
         } 
     },
 
     Mutation: {
-        SignUp: async (parent, args) => {
-            args.password = await bcrypt.hash(this.password, 10);
+        // TODO: Let user know that they must verify by email to login.
+        SignUp: async (parent, {email, username, password}) => {
+            let body = {email, username, password}
+            // This hashes the newly given password password
+            body.password = await bcrypt.hash(body.password, 10);
             const user = await db("user")
-            .insert(args)
+            .insert(body)
+            .returning('*')
             
-            const token = CreateToken(user)
+            let newUser = user[0]
+            
+            if (newUser)
+            {
+                return ("Please Check your Email for verification")
+            }
 
-            return { token, user }
+            else 
+            {
+                throw new AuthenticationError('Failed to add a new user :/');
+            } 
         },
 
         Login: async (parent, { username, password }) => {
-            try
-            {
-                const user = await db('user')
-                .select('username, gender', 'bio', 'email', 'gender', 'status', 'age')
-                .where('username', username)
 
-                try
-                {
-                    const check = await bcrypt.compare(password, user.password)
-                    if (check)
-                    {
-                        const token = await CreateToken(user)
-    
-                        return { token, user }
-                    }
-                }
-                catch
-                {
-                    console.error("password doesn't match")
-                }
+            const [user, error] = await tryCatcher(db('user')
+            .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age', 'password', 'id')
+            .where('username', username)
+            .first(), "failed to find user")
 
-            }
-            catch
+            const [check, error1] = await tryCatcher(bcrypt.compare(password, user.password), "failed to compare passwords")
+
+            if (check)
             {
-                console.error("failed to login....");
+                const token = CreateToken(user)
+                console.log(token, "here")
+                delete user.password
+                console.log(token, user)
+                return { token, user }
             }
         }
     }
