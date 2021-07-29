@@ -25,31 +25,43 @@ const resolvers = {
     },
 
     Mutation: {
-        SignUp: async (parent, args) => {
-            args.password = await bcrypt.hash(args.password, 10);
+        // TODO: Let user know that they must verify by email to login.
+        SignUp: async (parent, {email, username, password}) => {
+            let body = {email, username, password}
+            // This hashes the newly given password password
+            body.password = await bcrypt.hash(body.password, 10);
             const user = await db("user")
-            .insert(args)
-            .first()
+            .insert(body)
+            .returning('*')
             
-            const token = CreateToken(user)
+            let newUser = user[0]
+            
+            if (newUser)
+            {
+                return ("Please Check your Email for verification")
+            }
 
-            return { token, user }
+            else 
+            {
+                throw new AuthenticationError('Failed to add a new user :/');
+            } 
         },
 
         Login: async (parent, { username, password }) => {
 
             const [user, error] = await tryCatcher(db('user')
-            .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age', 'password')
+            .select('username', 'gender', 'bio', 'email', 'gender', 'status', 'age', 'password', 'id')
             .where('username', username)
             .first(), "failed to find user")
-            
+
             const [check, error1] = await tryCatcher(bcrypt.compare(password, user.password), "failed to compare passwords")
 
             if (check)
             {
                 const token = CreateToken(user)
+                console.log(token, "here")
                 delete user.password
-
+                console.log(token, user)
                 return { token, user }
             }
         }
