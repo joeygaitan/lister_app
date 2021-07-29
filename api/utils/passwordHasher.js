@@ -1,16 +1,22 @@
 const bcrypt = require('bcrypt')
+const db = require('../db/knex')
 
 const passwordHasher = async (password) => {
     const letNewPassword = await bcrypt.hash(password, 10);
     
-    console.log(letNewPassword)
+    return password;
 }
 
-const comparePassword = (password, otherPassword) => {
-    bcrypt.compare(password, otherPassword)
-    .then((data) => {
-        console.log("Here", data)
-    })
+const comparePassword = async (username, password) => {
+    let user = await db('user')
+    .where('username', username)
+    .select('password')
+    .first()
+
+    let check = await bcrypt.compare(password, user.password)
+
+    return check;
 }
 
-console.log(comparePassword("1234", "$2b$10$ZntEbhwd9ETwoKFZBTnGEOiS8bJmT3XqHtKKghriDyqadQsjF0W.y"))
+module.exports = { passwordHasher, comparePassword };
+
