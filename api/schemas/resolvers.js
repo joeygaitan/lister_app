@@ -34,7 +34,7 @@ const resolvers = {
                 })
 
                 const [personal_group_list_elements, personal_group_lists_elements_errors] = await tryCatcher(db('group_list_element')
-                .where('group_list_id', (group_listIDs.length > 0) ? group_listIDs : 0))
+                .where('group_list_id', (group_listIDs.length > 0) ? group_listIDs: 0))
                 
                 for (let i = 0; i < personal_group_list_elements.length(); i++)
                 {
