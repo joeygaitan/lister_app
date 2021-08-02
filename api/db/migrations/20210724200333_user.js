@@ -9,6 +9,7 @@ exports.up = function(knex) {
       table.enu('gender', ['male', 'female', 'trans', 'nonbinary']).defaultTo('nonbinary');
       table.enu('status', ['away', 'offline', 'online']).defaultTo('offline');
       table.string('bio');
+      table.enu('email_status', ['verified', 'pending']).defaultTo('pending');
       table.timestamps(true,true);
   })
 };

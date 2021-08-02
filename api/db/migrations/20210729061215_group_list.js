@@ -1,5 +1,3 @@
-const { toNamespacedPath } = require("path/posix");
-
 exports.up = function(knex) {
     return knex.schema.createTable('group_list', (table) => {
         table.increments('id');
