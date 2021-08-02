@@ -36,12 +36,11 @@ const typeDefs = gql`
 
     type Group_list
     {
-        id:ID!
-        user_id: ID!
-        name: String!
-        bio: String!
-        private: Boolean!
-        group_list_elements: [Group_List_Element]
+        id:ID
+        user_id: ID
+        name: String
+        bio: String
+        private: Boolean
     }
 
     type Auth {
@@ -51,8 +50,16 @@ const typeDefs = gql`
 
     type Query {
         GetSelf: User
-        GetGroupsLists: Group_list
+        GetGroupsLists: [Group_list]
     } 
+
+    input SignUpVerify
+    {
+        age: Int!
+        gender: Gender
+        status: Status
+        bio: String
+    }
 
     type Mutation {
         Login(username: String!, password: String!): Auth
