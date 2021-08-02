@@ -43,15 +43,15 @@ const typeDefs = gql`
         private: Boolean
     }
 
-    type Auth {
-        token: ID!
-        user: User
+    type list
+    {
+        id:ID
+        user_id: ID
+        name: String
+        bio: String
+        private: Boolean
+        lists: [Group_List_Element] 
     }
-
-    type Query {
-        GetSelf: User
-        GetGroupsLists: [Group_list]
-    } 
 
     input SignUpVerify
     {
@@ -61,9 +61,37 @@ const typeDefs = gql`
         bio: String
     }
 
+    input Input_Group_list
+    {
+        password: String
+        name: String!
+        bio: String!
+        private: Boolean!
+    }
+
+    input Input_Group_list_element
+    {
+        name: String!
+        url: String
+        bio: String
+    }
+
+    type Auth {
+        token: ID!
+        user: User
+    }
+
+    type Query {
+        GetSelf: User
+        GetGroupList(id:ID!): list
+        GetGroupsLists: [Group_list]
+    } 
+
     type Mutation {
         Login(username: String!, password: String!): Auth
         SignUp(email: String!, username: String!, password: String!): String
+        AddGroupList(input: Input_Group_list!): Group_list
+        AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
     }
 `;
 
