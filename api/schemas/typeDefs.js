@@ -90,6 +90,7 @@ const typeDefs = gql`
     type Mutation {
         Login(username: String!, password: String!): Auth
         SignUp(email: String!, username: String!, password: String!): String
+        AddOtherList(id: ID!): list
         AddGroupList(input: Input_Group_list!): Group_list
         AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
     }
