@@ -25,8 +25,8 @@ const resolvers = {
         GetGroupsLists: async function (parent, args, context) {
             if (context.user)
             {
-                group_list = GetPersonalLists(context.user.id)
-
+                group_lists = GetPersonalLists(context.user.id)
+                
                 return group_lists
             }
         },
@@ -95,6 +95,104 @@ const resolvers = {
                 const token = CreateToken(user)
                 delete user.password
                 return { token, user }
+            }
+        },
+
+        AddGroupList: async (parent, args, context) => {
+            if (context.user)
+            {
+                if (args.input.password)
+                {
+                    if (args.input.password.length)
+                    {
+                        args.input.password = await bcrypt.hash(args.password, 10);
+                        args.input.private = true;
+                    }
+                }
+                else
+                {
+                    args.input.private = false;
+                    args.input.password = '';
+                }
+
+                
+                let group_list = {
+                    user_id: context.user.id,
+                    name: args.input.name,
+                    password: args.input.password,
+                    bio: args.input.bio || '',
+                    private:args.input.private
+                }
+
+                let newList = await db("group_list")
+                .insert(group_list)
+                .returning('*')
+                
+                newList = newList[0]
+
+
+                if (newList)
+                {
+                    return newList;
+                }
+                else
+                {
+                    console.error('failed to add a new one')
+                }
+            }
+        },
+
+        AddGroupListElement: async (parent, args, context) => {
+            if (context.user)
+            {
+                const groupList = await tryCatcher(db('group_list')
+                .where('id', args.id)
+                .first(), "failed to find a group list")
+
+                if (!groupList)
+                {
+                    const otherGroupList = await tryCatcher(db('user_group_list')
+                    .where('user_group_list', args.id)
+                    .whereNot('admin_level', '!=', 'blocked')
+                    .first(), "failed to find shared list")
+
+                    if (otherGroupList)
+                    {
+                        let newList = {
+                            ...args.input,
+                            group_list_id: args.id,
+                            user_id: context.user.id
+                        }
+    
+                        let sharedGroupListElement = await db('group_list_element')
+                        .insert(newList)
+                        .returning('*')
+
+                        sharedGroupListElement = sharedGroupListElement[0]
+
+                        return sharedGroupList;
+                    }
+                    else
+                    {
+                        console.error('failed to find group_list')
+                    }
+                }
+                else
+                {
+                    let newList = {
+                        ...args.input,
+                        group_list_id: args.id,
+                        user_id: context.user.id
+                    }
+
+                    let newListElement = await db('group_list_element')
+                    .insert(newList)
+                    .returning('*')
+
+                    newListElement = newListElement[0]
+
+                    return newListElement;
+                }
             }
         }
     }
