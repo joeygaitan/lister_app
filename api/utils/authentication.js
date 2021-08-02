@@ -20,7 +20,6 @@ module.exports = {
         try 
         {
             const { data } = jwt.verify(token, process.env.SECRET, { maxAge: process.env.EXPIRATION })
-            console.log(data)
             req.user = data
         }
         catch
@@ -31,8 +30,8 @@ module.exports = {
         return req;
     },
 
-    CreateToken: function ({username, email, id})
+    CreateToken: async function ({username, email, id})
     {
-        return jwt.sign({data: {username, email, id}}, process.env.SECRET, { expiresIn: process.env.EXPIRATION })
+        return jwt.sign({ data: { username, email, id } }, process.env.SECRET, { expiresIn: process.env.EXPIRATION });
     }
 };
