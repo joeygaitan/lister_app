@@ -3,10 +3,11 @@ const bcrypt = require('bcrypt')
 const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
+const { GetPersonalLists } = require('../utils/database_requests');
 
 const resolvers = {
     Query: {
-        GetSelf: async (parent, args, context) => {
+        GetSelf: async function (parent, args, context) {
             if (context.user) {
                 try {
                     const data = await db('user')
@@ -21,22 +22,38 @@ const resolvers = {
                 }
             }
         },
-        GetGroupsLists: async (parent, args, context) => {
+        GetGroupsLists: async function (parent, args, context) {
             if (context.user)
             {
-                const [personal_group_lists, error] = await tryCatcher(db('group_list')
-                .where('user_id', context.user.id)
-                .returning("*"), "failed to find personal user projects")
-
-                const [other_group_lists, otherGroupListError] = await tryCatcher(db('user_group_list')
-                .where('user_id', context.user.id)
-                .whereNot('admin_level', '!=', 'blocked')
-                .returning("*")
-                , "failed to find other group lists")
-                
-                const group_lists = [...personal_group_lists, ...other_group_lists]
+                group_list = GetPersonalLists(context.user.id)
 
                 return group_lists
+            }
+        },
+        GetGroupList: async function (parent, {id}, context) {
+            if (context.user)
+            {
+                const group_lists = await GetPersonalLists(context.user.id)
+
+                list = group_lists.find(element => element.id == id)
+
+                if (list)
+                {
+                    const [list_elements, error2] = await tryCatcher(db('group_list_element')
+                    .where('group_list_id', list.id)
+                    .returning('*'), 'failed to find elements')
+                    
+                    if (list_elements)
+                    {
+                        list['lists'] = list_elements
+
+                        return list;
+                    }
+                }
+                else
+                {
+                    console.log('failed to find a list :(');
+                }
             }
         }
     },

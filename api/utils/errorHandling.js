@@ -10,7 +10,6 @@ async function tryCatcher(promise, errorMessage)
         console.error(errorMessage)
         return [null, error];
     }
-
 }
 
 module.exports = {

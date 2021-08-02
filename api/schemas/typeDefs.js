@@ -43,6 +43,16 @@ const typeDefs = gql`
         private: Boolean
     }
 
+    type list
+    {
+        id:ID
+        user_id: ID
+        name: String
+        bio: String
+        private: Boolean
+        lists: [Group_List_Element] 
+    }
+
     type Auth {
         token: ID!
         user: User
@@ -50,6 +60,7 @@ const typeDefs = gql`
 
     type Query {
         GetSelf: User
+        GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
     } 
 
