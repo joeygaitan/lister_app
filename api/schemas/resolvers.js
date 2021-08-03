@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
-const { GetPersonalLists } = require('../utils/database_requests');
+const { GetPersonalLists, GetPersonalList } = require('../utils/database_requests');
 
 const resolvers = {
     Query: {
@@ -76,8 +76,6 @@ const resolvers = {
                 .where('name', 'like', `%${search}%`)
                 .whereNot('user_id', '=', context.user.id)
                 .whereNot('private', '=', true)
-                
-                console.log(searchedGroupList)
 
                 return searchedGroupList;
             }
@@ -139,26 +137,27 @@ const resolvers = {
                 // checks that you're not adding yourself to the list
                 const list = await db('group_list')
                 .whereNot('user_id', '=', context.user.id)
-                .andWhere('private', '!=', true)
+                .andWhere('private', '=', false)
                 .where('id', group_list_id)
+                .first()
 
                 if (list)
                 {
                     // checks for any duplicates of the same list.
                     const sharedLists = await db('user_group_list')
-                    .whereNot('group_list_id', '!=', list.id)
+                    .where('group_list_id', '=', list.id)
                     .andWhere('user_id', '=', context.user.id)
 
                     if (sharedLists.length == 0)
                     {
                         const addedTolist = await db('user_group_list')
                         .insert({
-                            group_list_id: list.id,
+                            group_list_id,
                             user_id: context.user.id
                         })
                         .returning('*')
- 
-                        let list = await GetPersonalList(id, context.user.id)
+                        
+                        let list = await GetPersonalList(group_list_id, context.user.id)
                         return list;
                     }
                     else
