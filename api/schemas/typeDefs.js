@@ -53,6 +53,13 @@ const typeDefs = gql`
         lists: [Group_List_Element] 
     }
 
+    type User_Group_list
+    {
+        id: ID!
+        user_id: ID!
+        group_list_id: ID!
+    }
+
     input SignUpVerify
     {
         age: Int!
@@ -85,12 +92,21 @@ const typeDefs = gql`
         GetSelf: User
         GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
+        
+        GetGroupInvites: [User_Group_list]
+
+        FindLists(search: String!) : [Group_list]
+        FindListsLoggedOff(search: String!) : [Group_list]
     } 
 
     type Mutation {
         Login(username: String!, password: String!): Auth
         SignUp(email: String!, username: String!, password: String!): String
-        AddOtherList(id: ID!): list
+
+        FollowGroupList(group_list_id: ID!): list
+        InviteTooFollowList(admin_level: ID!, group_list_id: ID!, user_id: ID!): String
+        UpdateInviteStatus(choice: Boolean!, id: ID!): list
+
         AddGroupList(input: Input_Group_list!): Group_list
         AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
     }
