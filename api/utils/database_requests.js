@@ -10,16 +10,27 @@ async function GetPersonalLists (id)
 
     // Filters out any lists that you're blocked from, and any lists you're added too. 
     // You can only follow public lists and can only be invited to follow private lists.
-    const [other_group_lists, otherGroupListError] = await tryCatcher(db('user_group_list')
+    let [other_group_lists, otherGroupListError] = await tryCatcher(db('user_group_list')
     .where('user_id', id)
     .whereNot('admin_level', '=', 'blocked')
     .whereNot('invite_status', '=', 'pending')
     .whereNot('invite_status', '=', 'declined')
+    .select('group_list_id')
     .returning("*")
     , "failed to find other group lists")
-    
+
+    let idList = []
+    for (let i = 0; i < other_group_lists.length; ++i)
+    {
+        idList.push(other_group_lists[i]['group_list_id'])
+    }
+
+    const [shared_lists, sharedListErrors] = await tryCatcher(db('group_list')
+    .whereIn('id', idList)
+    .returning('*'), 'failed')
+
     // return the sum of each and spread all of their content into a single list.
-    const group_lists = [...personal_group_lists, ...other_group_lists];
+    const group_lists = [...personal_group_lists, ...shared_lists];
     
     return group_lists;
 }
