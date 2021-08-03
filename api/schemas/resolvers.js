@@ -55,7 +55,42 @@ const resolvers = {
                     console.log('failed to find a list :(');
                 }
             }
-        }
+        },
+
+        GetGroupInvites: async function (parent, args, context)
+        {
+            if (context.user)
+            {
+                const getPendingInvites = await db('user_group_list')
+                .where('user_id', context.user.id)
+                .where('invite_status', '=', 'pending')
+                
+                return getPendingInvites;
+            }
+        },
+
+        FindLists: async function (parent, {search}, context) {
+            if (context.user)
+            {
+                const searchedGroupList = await db('group_list')
+                .where('name', 'like', `%${search}%`)
+                .whereNot('user_id', '=', context.user.id)
+                .whereNot('private', '=', true)
+                
+                console.log(searchedGroupList)
+
+                return searchedGroupList;
+            }
+        },
+
+        FindListsLoggedOff: async function (parentm, {search})
+        {
+            const searchedGroupList = await db('group_list')
+            .where('name', 'LIKE', `%${search}%`)
+            .whereNot('private', '=', true)
+
+            return searchedGroupList;
+        } 
     },
 
     Mutation: {
@@ -95,6 +130,108 @@ const resolvers = {
                 const token = CreateToken(user)
                 delete user.password
                 return { token, user }
+            }
+        },
+
+        FollowGroupList: async (parent, { group_list_id }, context) => {
+            if (context.user)
+            {
+                // checks that you're not adding yourself to the list
+                const list = await db('group_list')
+                .whereNot('user_id', '=', context.user.id)
+                .andWhere('private', '!=', true)
+                .where('id', group_list_id)
+
+                if (list)
+                {
+                    // checks for any duplicates of the same list.
+                    const sharedLists = await db('user_group_list')
+                    .whereNot('group_list_id', '!=', list.id)
+                    .andWhere('user_id', '=', context.user.id)
+
+                    if (sharedLists.length == 0)
+                    {
+                        const addedTolist = await db('user_group_list')
+                        .insert({
+                            group_list_id: list.id,
+                            user_id: context.user.id
+                        })
+                        .returning('*')
+ 
+                        let list = await GetPersonalList(id, context.user.id)
+                        return list;
+                    }
+                    else
+                    {
+                        console.error('user is already added :/')
+                    }
+                }
+                else
+                {
+                    console.error('couldn\' find the list you\'re looking for. ')
+                }
+                
+            }
+        },
+
+        InviteTooFollowList: async (parent, { admin_level, group_list_id, user_id }, context) => {
+            if (context.user)
+            {
+                const userList = await db('group_list')
+                .whereNot('user_id', '=', user_id)
+                .andWhere('private', '!=', true)
+                .where('id', group_list_id)
+
+                if (userList)
+                {
+                    // checks for any duplicates of the same list.
+                    const sharedLists = await db('user_group_list')
+                    .whereNot('group_list_id', '!=', list.id)
+                    .andWhere('user_id', '=', user_id)
+
+                    if (sharedLists.length == 0)
+                    {
+                        const addedTolist = await db('user_group_list')
+                        .insert({
+                            group_list_id: list.id,
+                            user_id: user_id,
+                            admin_level,
+                            invite_status: 'pending'
+                        })
+                        .returning('*')
+ 
+                        return ("Sent Request");
+                    }
+                    else
+                    {
+                        console.error('user is already added :/')
+                    }
+                }
+            }
+        },
+
+        UpdateInviteStatus: async function (parent, { choice, id }, context) {
+            if (context.user)
+            {
+                const sharedList = await db('user_group_list')
+                .where('id', id)
+
+                if (sharedList)
+                {
+                    const updateList = await db('user_group_list')
+                    .where('id', id)
+                    .update({invite_status: (choice) ? 'accepted' : 'declined'})
+                    
+                    if (choice)
+                    {
+                        const newlyAddedList = await GetGroupList(updateList.group_list_id, updateList.user_id)
+                        return newlyAddedList;
+                    }
+                    else
+                    {
+                        return
+                    }
+                }
             }
         },
 
@@ -153,7 +290,7 @@ const resolvers = {
                 {
                     const otherGroupList = await tryCatcher(db('user_group_list')
                     .where('user_group_list', args.id)
-                    .whereNot('admin_level', '!=', 'blocked')
+                    .where('admin_level', '=', 'modify')
                     .first(), "failed to find shared list")
 
                     if (otherGroupList)
@@ -179,6 +316,7 @@ const resolvers = {
                 }
                 else
                 {
+                    // adds it for your self.
                     let newList = {
                         ...args.input,
                         group_list_id: args.id,
