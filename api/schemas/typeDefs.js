@@ -55,6 +55,8 @@ const typeDefs = gql`
 
     type User_Group_list
     {
+        list_name: String
+        username: String
         id: ID!
         user_id: ID!
         group_list_id: ID!
@@ -93,6 +95,8 @@ const typeDefs = gql`
         GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
         
+        GetSharedUserList(group_list_id: ID!): [User_Group_list]
+
         GetGroupInvites: [User_Group_list]
 
         FindLists(search: String!) : [Group_list]
@@ -105,7 +109,9 @@ const typeDefs = gql`
 
         FollowGroupList(group_list_id: ID!): list
         InviteTooFollowList(admin_level: ID!, group_list_id: ID!, user_id: ID!): String
+
         UpdateInviteStatus(choice: Boolean!, id: ID!): list
+        UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String 
 
         AddGroupList(input: Input_Group_list!): Group_list
         AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
@@ -113,3 +119,5 @@ const typeDefs = gql`
 `;
 
 module.exports = typeDefs;
+
+

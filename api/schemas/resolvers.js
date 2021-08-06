@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
-const { GetPersonalLists, GetPersonalList } = require('../utils/database_requests');
+const { GetPersonalLists, GetPersonalList, SharedListCheck } = require('../utils/database_requests');
 
 const resolvers = {
     Query: {
@@ -64,8 +64,21 @@ const resolvers = {
                 const getPendingInvites = await db('user_group_list')
                 .where('user_id', context.user.id)
                 .where('invite_status', '=', 'pending')
+                .select('name', 'admin_level', 'group_list_id')
+                // .innerJoin('user_id', 'user_id')
+                // .innerJoin('user_id', 'group_list.id')
                 
                 return getPendingInvites;
+            }
+        },
+
+        GetSharedUserList: async function (parent, { group_list_id }, context)
+        {
+            if (context.user)
+            {
+                const sharedUsers = await GetSharedLists(context.user.id, group_list_id)
+
+                return sharedUsers;
             }
         },
 
@@ -105,7 +118,7 @@ const resolvers = {
             
             if (newUser)
             {
-                return ("Please Check your Email for verification")
+                return ("Please Check your Email for verification");
             }
 
             else 
@@ -156,7 +169,7 @@ const resolvers = {
                             user_id: context.user.id
                         })
                         .returning('*')
-                        
+
                         let list = await GetPersonalList(group_list_id, context.user.id)
                         return list;
                     }
@@ -209,6 +222,8 @@ const resolvers = {
             }
         },
 
+
+
         UpdateInviteStatus: async function (parent, { choice, id }, context) {
             if (context.user)
             {
@@ -230,6 +245,32 @@ const resolvers = {
                     {
                         return
                     }
+                }
+            }
+        },
+
+        UpdateUserListAccess: async function (parent, { choice, user_id, group_list_id }, context)
+        {
+            if (context.user)
+            {
+                if (SharedListCheck(context.user.id, user_id, group_list_id))
+                {
+                    const updateList = await db('user_group_list')
+                    .where('group_list_id', group_list_id)
+                    .andWhere('user_id', user_id)
+                    .update({
+                        admin_level: choice
+                    })
+                    .first()
+                    
+                    if (updateList)
+                    {
+                        return ("finished up failure");
+                    }
+                }
+                else
+                {
+                    return ('failed to updated');
                 }
             }
         },

@@ -5,7 +5,7 @@ exports.up = function(knex) {
         table.integer('user_id').references('user.id').notNullable()
         table.integer('group_list_id').references('group_list.id').notNullable()
         table.enu('invite_status', ['pending', 'declined', 'accepted', 'public']).defaultTo('public');
-        table.enu('admin_level', [,'view', 'modify', 'blocked']).defaultTo('view');
+        table.enu('admin_level', ['only_modify_personal_additions','view', 'modify', 'blocked']).defaultTo('view');
     })
 };
 

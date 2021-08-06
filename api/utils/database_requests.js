@@ -20,10 +20,9 @@ async function GetPersonalLists (id)
     , "failed to find other group lists")
 
     let idList = []
-    for (let i = 0; i < other_group_lists.length; ++i)
-    {
-        idList.push(other_group_lists[i]['group_list_id'])
-    }
+    other_group_lists.map((group_id)=> {
+        idList.push(group_id['group_list_id'])
+    })
 
     const [shared_lists, sharedListErrors] = await tryCatcher(db('group_list')
     .whereIn('id', idList)
@@ -60,7 +59,69 @@ async function GetPersonalList (group_list_id, user_id)
     }
 }
 
+async function GroupListCheck (user_id, group_list_id)
+{
+    // Check if user owns group_list
+    const groupCheck = await db('group_list')
+    .where('user_id', user_id)
+    .andWhere('id', group_list_id)
+    .first()
+
+    if (groupCheck)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+// Checks to see if they're creator of the group_list and sees if there is actually a shared user in your list 
+async function SharedListCheck (owner_id, user_id, group_list_id)
+{
+    if (GroupListCheck(owner_id, group_list_id))
+    {
+        // check if user was already given an invite
+        const userGroupCheck = await db('user_group_list')
+        .where('user_id', user_id)
+        .andWhere('group_list_id', group_list_id)
+        .first()
+
+        if (userGroupCheck)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+// async function GetSharedLists (owner_id, group_list_id)
+// {
+//     if (GroupListCheck(owner_id, group_list_id))
+//     {
+//         const sharedUsers = await db('user_group_list')
+//         .select( 'name', 'admin_level', 'user_id', 'group_list_id')
+//         .innerJoin('user_group_list.group_list_id', 'group_list.id')
+//         .innerJoin('user_group_list.user_id', 'user.id')
+//         .where('group_list_id', group_list_id)
+
+//         console.log(sharedUsers)
+
+//         return sharedUsers;
+//     }
+// }
+
 module.exports = {
     GetPersonalList,
-    GetPersonalLists
+    GetPersonalLists,
+    SharedListCheck,
+    // GetSharedLists
 }
