@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
-const { GetPersonalLists, GetPersonalList, SharedListCheck } = require('../utils/database_requests');
+const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists } = require('../utils/database_requests');
 
 const resolvers = {
     Query: {
@@ -82,7 +82,7 @@ const resolvers = {
             }
         },
 
-        FindLists: async function (parent, {search}, context) {
+        FindLists: async function (parent, { search }, context) {
             if (context.user)
             {
                 const searchedGroupList = await db('group_list')

@@ -55,7 +55,7 @@ const typeDefs = gql`
 
     type User_Group_list
     {
-        list_name: String
+        name: String
         username: String
         id: ID!
         user_id: ID!
