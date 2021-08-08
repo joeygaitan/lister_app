@@ -62,12 +62,16 @@ const resolvers = {
             if (context.user)
             {
                 const getPendingInvites = await db('user_group_list')
+                .andWhere('invite_status', '=', 'pending')
                 .where('user_id', context.user.id)
-                .where('invite_status', '=', 'pending')
-                .select('name', 'admin_level', 'group_list_id')
-                // .innerJoin('user_id', 'user_id')
-                // .innerJoin('user_id', 'group_list.id')
+                .innerJoin('group_list', 'group_list.id', 'user_group_list.group_list_id')
+                .innerJoin('user', 'user.id', 'user_group_list.user_id')
+                .returning('*')
+
                 
+
+                console.log(getPendingInvites)
+
                 return getPendingInvites;
             }
         },
@@ -189,23 +193,26 @@ const resolvers = {
         InviteTooFollowList: async (parent, { admin_level, group_list_id, user_id }, context) => {
             if (context.user)
             {
+                // checks if the user is trying trying to add themself to the shared group_list.
                 const userList = await db('group_list')
                 .whereNot('user_id', '=', user_id)
-                .andWhere('private', '!=', true)
                 .where('id', group_list_id)
+
+                console.log(userList, userList)
 
                 if (userList)
                 {
                     // checks for any duplicates of the same list.
                     const sharedLists = await db('user_group_list')
-                    .whereNot('group_list_id', '!=', list.id)
+                    .where('group_list_id', '=', group_list_id)
                     .andWhere('user_id', '=', user_id)
 
+                    console.log(sharedLists)
                     if (sharedLists.length == 0)
                     {
                         const addedTolist = await db('user_group_list')
                         .insert({
-                            group_list_id: list.id,
+                            group_list_id: group_list_id,
                             user_id: user_id,
                             admin_level,
                             invite_status: 'pending'
@@ -330,7 +337,11 @@ const resolvers = {
                 {
                     const otherGroupList = await tryCatcher(db('user_group_list')
                     .where('user_group_list', args.id)
+                    .whereNot('admin_level', '=', 'blocked')
+                    .whereNot('invite_status', '=', 'pending')
+                    .whereNot('invite_status', '=', 'declined')
                     .where('admin_level', '=', 'modify')
+                    .orWhere('admin_level', '=', 'only_modify_personal_additions')
                     .first(), "failed to find shared list")
 
                     if (otherGroupList)

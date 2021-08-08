@@ -107,7 +107,6 @@ async function GetSharedLists (owner_id, group_list_id)
 {
     if (GroupListCheck(owner_id, group_list_id))
     {
-        console.log("line 110")
         const sharedUsers = await db('user_group_list')
         .where('group_list_id', group_list_id)
         .innerJoin('group_list', 'group_list.id', 'user_group_list.group_list_id')
