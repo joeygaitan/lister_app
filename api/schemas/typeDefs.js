@@ -14,6 +14,14 @@ const typeDefs = gql`
         online
     }
 
+    enum Admin_Level
+    {
+        only_modify_personal_additions
+        view
+        modify
+        blocked
+    }
+
     type User {
         id: ID!
         username: String!
@@ -55,6 +63,8 @@ const typeDefs = gql`
 
     type User_Group_list
     {
+        name: String!
+        username: String!
         id: ID!
         user_id: ID!
         group_list_id: ID!
@@ -93,6 +103,8 @@ const typeDefs = gql`
         GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
         
+        GetSharedUserList(group_list_id: ID!): [User_Group_list]
+
         GetGroupInvites: [User_Group_list]
 
         FindLists(search: String!) : [Group_list]
@@ -104,8 +116,10 @@ const typeDefs = gql`
         SignUp(email: String!, username: String!, password: String!): String
 
         FollowGroupList(group_list_id: ID!): list
-        InviteTooFollowList(admin_level: ID!, group_list_id: ID!, user_id: ID!): String
+        InviteTooFollowList(admin_level: String!, group_list_id: ID!, user_id: ID!): String
+
         UpdateInviteStatus(choice: Boolean!, id: ID!): list
+        UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String 
 
         AddGroupList(input: Input_Group_list!): Group_list
         AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
@@ -113,3 +127,5 @@ const typeDefs = gql`
 `;
 
 module.exports = typeDefs;
+
+
