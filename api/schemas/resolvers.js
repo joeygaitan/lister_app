@@ -61,27 +61,34 @@ const resolvers = {
         {
             if (context.user)
             {
-                const getPendingInvites = await db('user_group_list')
-                .andWhere('invite_status', '=', 'pending')
-                .where('user_id', context.user.id)
-                .innerJoin('group_list', 'group_list.id', 'user_group_list.group_list_id')
-                .innerJoin('user', 'user.id', 'user_group_list.user_id')
+                const groupInvites = await db('group_list as gl')
+                .select(
+                    'u.username',
+                    'u.id as group_list_owner_id',
+                    'gl.name',
+                    'ugl.group_list_id',
+                    'ugl.invite_status',
+                    'ugl.admin_level'
+                )
+                .innerJoin('user as u', 'u.id', 'gl.user_id')
+                .innerJoin('user_group_list as ugl', 'ugl.group_list_id', 'gl.id')
+                .where('ugl.user_id', '=', context.user.id)
+                .andWhere('invite_status', '=', 'pending') 
                 .returning('*')
 
+                console.log(groupInvites, "line 86")
                 
-
-                console.log(getPendingInvites)
-
-                return getPendingInvites;
+                return groupInvites;
             }
         },
-
+        
+        // 
         GetSharedUserList: async function (parent, { group_list_id }, context)
         {
             if (context.user)
             {
                 const sharedUsers = await GetSharedLists(context.user.id, group_list_id)
-
+                console.log(sharedUsers)
                 return sharedUsers;
             }
         },

@@ -66,7 +66,7 @@ const typeDefs = gql`
         name: String!
         username: String!
         id: ID!
-        user_id: ID!
+        group_list_owner_id: ID!
         group_list_id: ID!
     }
 
