@@ -103,6 +103,7 @@ async function SharedListCheck (owner_id, user_id, group_list_id)
     }
 }
 
+// Gets users in your list
 async function GetSharedLists (owner_id, group_list_id)
 {
     if (GroupListCheck(owner_id, group_list_id))
@@ -112,8 +113,6 @@ async function GetSharedLists (owner_id, group_list_id)
         .innerJoin('group_list', 'group_list.id', 'user_group_list.group_list_id')
         .innerJoin('user', 'user.id', 'user_group_list.user_id')
         .returning('*')
-
-        console.log(sharedUsers)
 
         return sharedUsers;
     }
