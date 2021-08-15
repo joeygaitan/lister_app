@@ -68,6 +68,8 @@ const typeDefs = gql`
         id: ID!
         group_list_owner_id: ID!
         group_list_id: ID!
+        admin_level: String!
+        invite_status: String!
     }
 
     input SignUpVerify
