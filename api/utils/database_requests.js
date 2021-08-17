@@ -130,6 +130,16 @@ async function SharedListCheck (owner_id, user_id, group_list_id)
     }
     else
     {
+        const checkModify = await db('user_group_list')
+        .where('invite_status', '=', 'modify')
+        .andWhere('user_id', user_id)
+        .andWhere('group_list_id', group_list_id)
+
+        if (checkModify)
+        {
+            return true
+        }
+        
         return false;
     }
 }

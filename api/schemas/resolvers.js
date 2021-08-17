@@ -275,11 +275,10 @@ const resolvers = {
                     .update({
                         admin_level: choice
                     })
-                    .first()
                     
                     if (updateList)
                     {
-                        return ("finished up failure");
+                        return ("successfully updated user's access privilege");
                     }
                 }
                 else
@@ -337,24 +336,28 @@ const resolvers = {
             if (context.user)
             {
                 // updates element of array
+                console.log('here')
                 if (args.group_list_element_id)
                 {
                     const groupList = await tryCatcher(db('group_list')
-                    .where('id', args.group_list_element_id)
+                    .where('id', args.group_list_id)
                     .where('user_id', context.user.id)
                     .first(), "failed to find a group list")
                     
+                    // if user created the group list
                     if (groupList)
                     {
+
                         const updatedGroupList = await tryCatcher(db('group_list_element')
                         .where('id', args.group_list_element_id)
                         .update({...args.input})
-                        .first(), "failed to find a group list")
+                        .returning('*'), "failed to find a group list")
 
                         return updatedGroupList
                     }
                     else
                     {
+                        // if the user is being shared the group_list...
                         const otherGroupList = await tryCatcher(db('user_group_list')
                         .where('user_group_list', args.group_list_id)
                         .andWhere('user_id', context.user.id)
@@ -370,7 +373,7 @@ const resolvers = {
                             const updatedGroupList = await tryCatcher(db('group_list_element')
                             .where('id', args.group_list_element_id)
                             .update({...args.input})
-                            .first(), "failed to find a group list")
+                            .returning('*'), "failed to find a group list")
 
                             return updatedGroupList
                         }
