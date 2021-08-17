@@ -4,6 +4,7 @@ const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
 const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists, GetSharedList } = require('../utils/database_requests');
+const e = require("express");
 
 const resolvers = {
     Query: {
@@ -265,7 +266,7 @@ const resolvers = {
 
         UpdateUserListAccess: async function (parent, { choice, user_id, group_list_id }, context)
         {
-            if (context.user)
+            if (context.user && context.user.id != user_id)
             {
                 if (SharedListCheck(context.user.id, user_id, group_list_id))
                 {
@@ -286,49 +287,57 @@ const resolvers = {
                     return ('failed to updated');
                 }
             }
+            else
+            {
+                console.log("you're not logged in or you can't modify your own privileges....")
+            }
         },
 
         AddGroupList: async (parent, args, context) => {
             if (context.user)
-            {
-                if (args.input.password)
+            { 
+                if (args.group_list_id)
                 {
-                    if (args.input.password.length)
+                    if (SharedListCheck(context.user.id, context.user.id, args.group_list_id))
                     {
-                        args.input.password = await bcrypt.hash(args.password, 10);
-                        args.input.private = true;
+                        
+                        const updateList = await db('group_list')
+                        .where('id', args.group_list_id)
+                        .update({ ...args.input })
+                        .returning('*')
+
+                        return updateList
+                    }
+                    else
+                    {
+                        console.log('you dont have the right privileges to update this group list post')
                     }
                 }
                 else
                 {
-                    args.input.private = false;
-                    args.input.password = '';
-                }
-
-                
-                let group_list = {
-                    user_id: context.user.id,
-                    name: args.input.name,
-                    password: args.input.password,
-                    bio: args.input.bio || '',
-                    private:args.input.private
-                }
-
-                let newList = await db("group_list")
-                .insert(group_list)
-                .returning('*')
-                
-                newList = newList[0]
-
-
-                if (newList)
-                {
-                    return newList;
-                }
-                else
-                {
-                    console.error('failed to add a new one')
-                }
+                    let group_list = {
+                        user_id: context.user.id,
+                        name: args.input.name,
+                        bio: args.input.bio || '',
+                        private:args.input.private
+                    }
+    
+                    let newList = await db("group_list")
+                    .insert(group_list)
+                    .returning('*')
+                    
+                    newList = newList[0]
+    
+    
+                    if (newList)
+                    {
+                        return newList;
+                    }
+                    else
+                    {
+                        console.error('failed to add a new one')
+                    }
+                }            
             }
         },
 

@@ -85,10 +85,9 @@ const typeDefs = gql`
 
     input Input_Group_list
     {
-        password: String
-        name: String!
-        bio: String!
-        private: Boolean!
+        name: String
+        bio: String
+        private: Boolean
     }
 
     input Input_Group_list_element
@@ -126,7 +125,7 @@ const typeDefs = gql`
         UpdateRecievedInviteStatus(choice: Boolean!, id: ID!): list
         UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String 
 
-        AddGroupList(input: Input_Group_list!): Group_list
+        AddGroupList(group_list_id: ID, input: Input_Group_list!): Group_list
         AddGroupListElement(group_list_element_id: ID, group_list_id: ID!, input: Input_Group_list_element!): Group_List_Element
     }
 `;
