@@ -1,16 +1,22 @@
 # backend api tasks
 
-# work on add one mutation updating by optional id mechanic
-# work on modifying users access for list sharing
-# work on deleteing a post element
-# work on adding a friend (make sure friend didn't invite you already, and you didn't invite them first)
-# work on adding friends privelage for invite_status to view
-# work on getting friends list
-# work on finding a one friend and all thier accessable lists
-# work on adjusting friends status [blocked, no longer friends, etc.]
-
 # backlog
 # work on comments table for group_list_elements
 # work on liking or disliking a list and list element
 # work on making signup use a email verification
 # work on allowing users to follow a page giving them updates via email that thier product is in stock (allow them to disable it via given email, can reactivate on list)
+
+# todo
+# work on adding friends privelage for invite_status to view [friends will be defaulted to view and public invite_status]
+# work on getting friends list
+# work on finding a one friend and all thier accessable lists
+# work on adjusting friends status [blocked, no longer friends, etc.]
+
+# In progress
+# work on modifying a group list page
+# work on deleteing a post element
+# work on adding a friend (make sure friend didn't invite you already, and you didn't invite them first)
+
+# Complete
+# work on add one mutation updating by optional id mechanic [X]
+# work on modifying users access for list sharing [X]
