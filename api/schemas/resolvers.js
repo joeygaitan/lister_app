@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
-const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists } = require('../utils/database_requests');
+const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists, GetSharedList } = require('../utils/database_requests');
 
 const resolvers = {
     Query: {
@@ -39,15 +39,12 @@ const resolvers = {
 
                 if (list)
                 {
-                    const [list_elements, error2] = await tryCatcher(db('group_list_element')
-                    .where('group_list_id', list.id)
-                    .returning('*'), 'failed to find elements')
+                    const list_elements = await GetPersonalList(list.id, list.user_id)   
+
                     
                     if (list_elements)
                     {
-                        list['lists'] = list_elements
-
-                        return list;
+                        return list_elements;
                     }
                 }
                 else
@@ -68,7 +65,8 @@ const resolvers = {
                     'gl.name',
                     'ugl.group_list_id',
                     'ugl.invite_status',
-                    'ugl.admin_level'
+                    'ugl.admin_level',
+                    'ugl.id as invite_id'
                 )
                 .innerJoin('user as u', 'u.id', 'gl.user_id')
                 .innerJoin('user_group_list as ugl', 'ugl.group_list_id', 'gl.id')
@@ -238,21 +236,23 @@ const resolvers = {
 
 
 
-        UpdateInviteStatus: async function (parent, { choice, id }, context) {
+        UpdateRecievedInviteStatus: async function (parent, { choice, id }, context) {
             if (context.user)
             {
                 const sharedList = await db('user_group_list')
                 .where('id', id)
-
+                .andWhere('invite_status', '=', 'pending')
+                console.log(sharedList)
                 if (sharedList)
                 {
                     const updateList = await db('user_group_list')
                     .where('id', id)
                     .update({invite_status: (choice) ? 'accepted' : 'declined'})
                     
+                    console.log
                     if (choice)
                     {
-                        const newlyAddedList = await GetGroupList(updateList.group_list_id, updateList.user_id)
+                        const newlyAddedList = await GetSharedList(updateList.user_id, updateList.group_list_id)
                         return newlyAddedList;
                     }
                     else
@@ -336,61 +336,104 @@ const resolvers = {
         AddGroupListElement: async (parent, args, context) => {
             if (context.user)
             {
-                const groupList = await tryCatcher(db('group_list')
-                .where('id', args.id)
-                .first(), "failed to find a group list")
-
-                if (!groupList)
+                // updates element of array
+                if (args.group_list_element_id)
                 {
-                    const otherGroupList = await tryCatcher(db('user_group_list')
-                    .where('user_group_list', args.id)
-                    .whereNot('admin_level', '=', 'blocked')
-                    .whereNot('invite_status', '=', 'pending')
-                    .whereNot('invite_status', '=', 'declined')
-                    .where('admin_level', '=', 'modify')
-                    .orWhere('admin_level', '=', 'only_modify_personal_additions')
-                    .first(), "failed to find shared list")
-
-                    if (otherGroupList)
+                    const groupList = await tryCatcher(db('group_list')
+                    .where('id', args.group_list_element_id)
+                    .where('user_id', context.user.id)
+                    .first(), "failed to find a group list")
+                    
+                    if (groupList)
                     {
-                        let newList = {
-                            ...args.input,
-                            group_list_id: args.id,
-                            user_id: context.user.id
-                        }
-    
-                        let sharedGroupListElement = await db('group_list_element')
-                        .insert(newList)
-                        .returning('*')
+                        const updatedGroupList = await tryCatcher(db('group_list_element')
+                        .where('id', args.group_list_element_id)
+                        .update({...args.input})
+                        .first(), "failed to find a group list")
 
-                        sharedGroupListElement = sharedGroupListElement[0]
-
-                        return sharedGroupList;
+                        return updatedGroupList
                     }
                     else
                     {
-                        console.error('failed to find group_list')
+                        const otherGroupList = await tryCatcher(db('user_group_list')
+                        .where('user_group_list', args.group_list_id)
+                        .andWhere('user_id', context.user.id)
+                        .whereNot('admin_level', '=', 'blocked')
+                        .whereNot('invite_status', '=', 'pending')
+                        .whereNot('invite_status', '=', 'declined')
+                        .where('admin_level', '=', 'modify')
+                        .orWhere('admin_level', '=', 'only_modify_personal_additions')
+                        .first(), "failed to find shared list")
+
+                        if (otherGroupList)
+                        {
+                            const updatedGroupList = await tryCatcher(db('group_list_element')
+                            .where('id', args.group_list_element_id)
+                            .update({...args.input})
+                            .first(), "failed to find a group list")
+
+                            return updatedGroupList
+                        }
                     }
                 }
                 else
                 {
-                    // adds it for your self.
-                    let newList = {
-                        ...args.input,
-                        group_list_id: args.id,
-                        user_id: context.user.id
+                    const groupList = await tryCatcher(db('group_list')
+                    .where('id', args.group_list_id)
+                    .first(), "failed to find a group list")
+
+                    if (!groupList)
+                    {
+                        const otherGroupList = await tryCatcher(db('user_group_list')
+                        .where('user_group_list', args.group_list_id)
+                        .whereNot('admin_level', '=', 'blocked')
+                        .whereNot('invite_status', '=', 'pending')
+                        .whereNot('invite_status', '=', 'declined')
+                        .where('admin_level', '=', 'modify')
+                        .orWhere('admin_level', '=', 'only_modify_personal_additions')
+                        .first(), "failed to find shared list")
+
+                        if (otherGroupList)
+                        {
+                            let newList = {
+                                ...args.input,
+                                group_list_id: args.group_list_id,
+                                user_id: context.user.id
+                            }
+        
+                            let sharedGroupListElement = await db('group_list_element')
+                            .insert(newList)
+                            .returning('*')
+
+                            sharedGroupListElement = sharedGroupListElement[0]
+
+                            return sharedGroupList;
+                        }
+                        else
+                        {
+                            console.error('failed to find group_list')
+                        }
                     }
+                    else
+                    {
+                        // adds it for your self.
+                        let newList = {
+                            ...args.input,
+                            group_list_id: args.group_list_id,
+                            user_id: context.user.id
+                        }
 
-                    let newListElement = await db('group_list_element')
-                    .insert(newList)
-                    .returning('*')
+                        let newListElement = await db('group_list_element')
+                        .insert(newList)
+                        .returning('*')
 
-                    newListElement = newListElement[0]
+                        newListElement = newListElement[0]
 
-                    return newListElement;
+                        return newListElement;
+                    }
                 }
             }
-        }
+        },
     }
 }
 

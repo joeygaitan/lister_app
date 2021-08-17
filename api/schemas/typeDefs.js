@@ -34,6 +34,7 @@ const typeDefs = gql`
 
     type Group_List_Element
     {
+        username: String!
         id: ID!
         user_id: ID!
         group_list_id: ID!
@@ -46,6 +47,7 @@ const typeDefs = gql`
     {
         id:ID
         user_id: ID
+        username: String!
         name: String
         bio: String
         private: Boolean
@@ -53,11 +55,12 @@ const typeDefs = gql`
 
     type list
     {
-        id:ID
-        user_id: ID
-        name: String
-        bio: String
-        private: Boolean
+        id:ID!
+        user_id: ID!
+        username: String!
+        name: String!
+        bio: String!
+        private: Boolean!
         lists: [Group_List_Element] 
     }
 
@@ -65,9 +68,11 @@ const typeDefs = gql`
     {
         name: String!
         username: String!
-        id: ID!
+        invite_id: ID!
         group_list_owner_id: ID!
         group_list_id: ID!
+        admin_level: String!
+        invite_status: String!
     }
 
     input SignUpVerify
@@ -118,11 +123,11 @@ const typeDefs = gql`
         FollowGroupList(group_list_id: ID!): list
         InviteTooFollowList(admin_level: String!, group_list_id: ID!, user_id: ID!): String
 
-        UpdateInviteStatus(choice: Boolean!, id: ID!): list
+        UpdateRecievedInviteStatus(choice: Boolean!, id: ID!): list
         UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String 
 
         AddGroupList(input: Input_Group_list!): Group_list
-        AddGroupListElement(id: ID!, input: Input_Group_list_element!): Group_List_Element
+        AddGroupListElement(group_list_element_id: ID, group_list_id: ID!, input: Input_Group_list_element!): Group_List_Element
     }
 `;
 
