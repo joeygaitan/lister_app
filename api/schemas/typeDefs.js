@@ -14,8 +14,21 @@ const typeDefs = gql`
         online
     }
 
-    enum Admin_Level
-    {
+    enum View_Status {
+        archived
+        private 
+        public
+    }
+
+    enum Request_Status {
+        accepted 
+        declined 
+        silent_decline 
+        blocked 
+        pending
+    }
+
+    enum Admin_Level {
         only_modify_personal_additions
         view
         modify
@@ -32,8 +45,19 @@ const typeDefs = gql`
         bio: String
     }
 
-    type Group_List_Element
-    {
+    type Friend {
+        user: User
+        lists: [list]
+    }
+
+    type Friend_Request {
+        id: ID!
+        user_id: ID!
+        username: String!
+        request_status: Request_Status
+    }
+
+    type Group_List_Element {
         username: String!
         id: ID!
         user_id: ID!
@@ -43,29 +67,26 @@ const typeDefs = gql`
         bio: String
     }
 
-    type Group_list
-    {
+    type Group_list {
         id:ID
         user_id: ID
         username: String!
         name: String
         bio: String
-        private: Boolean
+        view_status: View_Status
     }
 
-    type list
-    {
+    type list {
         id:ID!
         user_id: ID!
         username: String!
         name: String!
         bio: String!
-        private: Boolean!
+        view_status: View_Status
         lists: [Group_List_Element] 
     }
 
-    type User_Group_list
-    {
+    type User_Group_list {
         name: String!
         username: String!
         invite_id: ID!
@@ -75,23 +96,20 @@ const typeDefs = gql`
         invite_status: String!
     }
 
-    input SignUpVerify
-    {
+    input SignUpVerify {
         age: Int!
         gender: Gender
         status: Status
         bio: String
     }
 
-    input Input_Group_list
-    {
+    input Input_Group_list {
         name: String
         bio: String
-        private: Boolean
+        view_status: View_Status
     }
 
-    input Input_Group_list_element
-    {
+    input Input_Group_list_element {
         name: String!
         url: String
         bio: String
@@ -113,6 +131,11 @@ const typeDefs = gql`
 
         FindLists(search: String!) : [Group_list]
         FindListsLoggedOff(search: String!) : [Group_list]
+
+        GetUsers(user_search: String!) : [User]
+        
+        GetPendingRequests: [Friend_Request]
+        GetFriends: [Friend]
     } 
 
     type Mutation {
@@ -127,6 +150,10 @@ const typeDefs = gql`
 
         AddGroupList(group_list_id: ID, input: Input_Group_list!): Group_list
         AddGroupListElement(group_list_element_id: ID, group_list_id: ID!, input: Input_Group_list_element!): Group_List_Element
+
+        AddFriend(user_id: ID!): String!
+        UpdateFriendRequest(user_id: ID!): String!
+        ArchiveGroupList(group_list_id: ID!): String!
     }
 `;
 
