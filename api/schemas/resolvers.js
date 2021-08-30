@@ -97,21 +97,63 @@ const resolvers = {
             {
                 const searchedGroupList = await db('group_list')
                 .where('name', 'like', `%${search}%`)
+                .where('view_status', '=', 'public')
                 .whereNot('user_id', '=', context.user.id)
-                .whereNot('private', '=', true)
 
                 return searchedGroupList;
             }
         },
+        /*
+            id:ID
+            user_id: ID
+            username: String!
+            name: String
+            bio: String
+            view_status: View_Status
+        */
 
-        FindListsLoggedOff: async function (parentm, {search})
+        FindListsLoggedOff: async function (parent, {search}, context)
         {
-            const searchedGroupList = await db('group_list')
+            const searchedGroupList = await db('group_list as gl')
+            .select(
+                'gl.id',
+                'gl.user_id',
+                'u.username',
+                'gl.name',
+                'gl.bio',
+                'gl.view_status'
+            )
+            .innerJoin('user as u', 'u.id', 'gl.user_id')
             .where('name', 'LIKE', `%${search}%`)
-            .whereNot('private', '=', true)
+            .andWhere('view_status', '=', 'public')
 
             return searchedGroupList;
-        } 
+        },
+
+        GetFriends: async function (parent, args, context) {
+            if (context.user)
+            {
+                const friends = await db('friend_list')
+                .where('recieved_id', context.user.id)
+                .orWhere('sender_id', context.user.id)
+                .andWhere('request_status', '=', 'accepted')
+
+                friends.map((friend)=> {
+                    if (friend.recieved_id == context.user.id)
+                    {
+                        delete friend[recieved_id];
+                    }
+                    else if (friend.sender_id == context.user.id)
+                    {
+                        delete friend[sender_id];
+
+                        
+                    }
+                })
+
+
+            }
+        }
     },
 
     Mutation: {
@@ -160,7 +202,7 @@ const resolvers = {
                 // checks that you're not adding yourself to the list
                 const list = await db('group_list')
                 .whereNot('user_id', '=', context.user.id)
-                .andWhere('private', '=', false)
+                .andWhere('view_status', '=', 'public')
                 .where('id', group_list_id)
                 .first()
 
@@ -446,6 +488,16 @@ const resolvers = {
                 }
             }
         },
+
+        ArchiveGroupList: async (parent, args, context) => {
+            if (context.user)
+            {
+                if (SharedListCheck(context.user.id, context.user.id, args.group_list_id))
+                {
+
+                }
+            }
+        }
     }
 }
 

@@ -11,7 +11,7 @@ async function GetPersonalLists (user_id)
         'gl.id', 
         'gl.name', 
         'gl.bio', 
-        'gl.private'
+        'gl.view_status'
     )
     .innerJoin('user as u', 'u.id', 'gl.user_id')
     .where('user_id', user_id)
@@ -45,7 +45,7 @@ async function GetPersonalLists (user_id)
         'gl.id', 
         'gl.name', 
         'gl.bio', 
-        'gl.private'
+        'gl.view_status'
     )
     .innerJoin('user as u', 'u.id', 'gl.user_id')
     .whereIn('gl.id', idList)
@@ -172,7 +172,7 @@ async function GetSharedList (user_id, group_list_id)
         'u.username',
         'gl.name',
         'gl.bio', 
-        'gl.private',
+        'gl.view_status',
         'gl.id as group_list_id'
     )
     .innerJoin('user as u', 'u.id', 'gl.user_id')
