@@ -4,7 +4,6 @@ const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
 const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists, GetSharedList } = require('../utils/database_requests');
-const e = require("express");
 
 const resolvers = {
     Query: {
@@ -26,7 +25,7 @@ const resolvers = {
         GetGroupsLists: async function (parent, args, context) {
             if (context.user)
             {
-                group_lists = GetPersonalLists(context.user.id)
+                group_lists = await GetPersonalLists(context.user.id)
                 
                 return group_lists
             }
@@ -133,25 +132,49 @@ const resolvers = {
         GetFriends: async function (parent, args, context) {
             if (context.user)
             {
-                const friends = await db('friend_list')
-                .where('recieved_id', context.user.id)
-                .orWhere('sender_id', context.user.id)
-                .andWhere('request_status', '=', 'accepted')
+                // const friends = await db('friend_list')
+                // .raw(`
+                //     select 
+                //         f.user_id,
+                //         u.username,
+                //         u.email,
+                //         u.gender,
+                //         u.status,
+                //         u.bio,
+                //         fl.request_status
+                //     from friend_list as fl,
+                //     lateral (
+                //         select case
+                //             when
+                //                 fl.sender_id = ${context.user.id} then fl.recieved_id
+                //             else
+                //                 fl.sender_id 
+                //             end
+                //     ) f(user_id)
+                //     inner join public."user" as u
+                //         on u.id = f.user_id
+                //     where 
+                //     fl.request_status='accepted'`
+                // )
 
-                friends.map((friend)=> {
-                    if (friend.recieved_id == context.user.id)
-                    {
-                        delete friend[recieved_id];
-                    }
-                    else if (friend.sender_id == context.user.id)
-                    {
-                        delete friend[sender_id];
+                // db.raw adds in the method name in front. such as from(db.raw('from')) this would add two froms in your query
+                // other camal case methods don't add them in allowing you to specify what you want.
+                // lateral allows you to add something to a selected select option allowing you to do expressions.
+                const friends = await db
+                .select(db.raw('f.user_id, u.username, u.email, u.gender, u.status, u.bio, fl.request_status'))
+                .from(db.raw(`friend_list as fl,`))
+                .joinRaw(`lateral (select case when fl.sender_id = ${context.user.id} then fl.recieved_id else fl.sender_id end) f(user_id)`)
+                .joinRaw(`inner join public."user" as u on u.id = f.user_id`)
+                .whereRaw(`fl.request_status='accepted'`)
 
-                        
-                    }
-                })
-
-
+                // console.log(friends)
+                // backlog: figure out a way to use a sub query to make a column that out puts a json array of lists
+                for (const friend of friends)
+                {
+                    friend['lists'] = await GetPersonalLists(friend.user_id)
+                }
+                console.log(friends)
+                return friends
             }
         }
     },

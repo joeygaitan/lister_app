@@ -46,8 +46,14 @@ const typeDefs = gql`
     }
 
     type Friend {
-        user: User
-        lists: [list]
+        user_id: ID!
+        username: String!
+        email: String!
+        gender: Gender
+        status: Status
+        bio: String
+        request_status: Request_Status
+        lists: [Group_list] 
     }
 
     type Friend_Request {
@@ -134,7 +140,7 @@ const typeDefs = gql`
 
         GetUsers(user_search: String!) : [User]
         
-        GetPendingRequests: [Friend_Request]
+        GetPendingFriendRequests: [Friend_Request]
         GetFriends: [Friend]
     } 
 
