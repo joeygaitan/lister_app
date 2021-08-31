@@ -4,6 +4,7 @@ const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
 const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists, GetSharedList } = require('../utils/database_requests');
+const { request } = require("express");
 
 const resolvers = {
     Query: {
@@ -134,27 +135,27 @@ const resolvers = {
             {
                 // const friends = await db('friend_list')
                 // .raw(`
-                //     select 
-                //         f.user_id,
-                //         u.username,
-                //         u.email,
-                //         u.gender,
-                //         u.status,
-                //         u.bio,
-                //         fl.request_status
-                //     from friend_list as fl,
-                //     lateral (
-                //         select case
-                //             when
-                //                 fl.sender_id = ${context.user.id} then fl.recieved_id
-                //             else
-                //                 fl.sender_id 
-                //             end
-                //     ) f(user_id)
-                //     inner join public."user" as u
-                //         on u.id = f.user_id
-                //     where 
-                //     fl.request_status='accepted'`
+                    // select 
+                    //     f.user_id,
+                    //     u.username,
+                    //     u.email,
+                    //     u.gender,
+                    //     u.status,
+                    //     u.bio,
+                    //     fl.request_status
+                    // from friend_list as fl,
+                    // lateral (
+                    //     select case
+                    //         when
+                    //             fl.sender_id = ${context.user.id} then fl.recieved_id
+                    //         else
+                    //             fl.sender_id 
+                    //         end
+                    // ) f(user_id)
+                    // inner join public."user" as u
+                    //     on u.id = f.user_id
+                    // where 
+                    // fl.request_status='accepted'`
                 // )
 
                 // db.raw adds in the method name in front. such as from(db.raw('from')) this would add two froms in your query
@@ -171,10 +172,29 @@ const resolvers = {
                 // backlog: figure out a way to use a sub query to make a column that out puts a json array of lists
                 for (const friend of friends)
                 {
-                    friend['lists'] = await GetPersonalLists(friend.user_id)
+                    friend['lists'] = await GetPersonalLists(friend.user_id, true)
                 }
                 console.log(friends)
                 return friends
+            }
+        },
+        /*
+            id: ID!
+            user_id: ID!
+            username: String!
+            request_status: Request_Status
+        */
+        GetPendingFriendRequests: async function (parent, args, context) {
+            if (context.user)
+            {
+                const friendRequests = await db
+                .select(db.raw('f.user_id, u.username, fl.request_status, fl.id'))
+                .from(db.raw(`friend_list as fl,`))
+                .joinRaw(`lateral (select case when fl.sender_id = ${context.user.id} then fl.recieved_id else fl.sender_id end) f(user_id)`)
+                .joinRaw(`inner join public."user" as u on u.id = f.user_id`)
+                .whereRaw(`fl.request_status='pending'`)
+
+                return friendRequests;
             }
         }
     },
@@ -512,12 +532,93 @@ const resolvers = {
             }
         },
 
-        ArchiveGroupList: async (parent, args, context) => {
+        AddFriend: async (parent, { user_id }, context) => {
+            if (context.user)
+            {
+                if (context.user.id != user_id)
+                {
+                    const checkForDuplicates = await db('friend_list')
+                    whereRaw(`where sender_id=${context.user.id} and recieved_id=${user_id} or sender_id=${user_id} and recieved_id=${context.user.id}`)
+
+                    if (!checkForDuplicates)
+                    {
+                        const newInvite = await db('friend_list')
+                        .insert({
+                            sender_id: context.user.id,
+                            recieved_id: user_id
+                        })
+                        .returning('*')
+
+                        if (newInvite)
+                        {
+                            return ('Invite Sent')
+                        }
+                        else
+                        {
+                            return ('failed to send invite :(')
+                        }
+                    }
+                    else
+                    {
+                        return ('friend request has already been sent :(')
+                    }
+                }
+            }
+        },
+
+        UpdateFriendRequest: async (parent, { request_id, choice }, context) => {
+            if (context.user)
+            {
+                const requestCheck = await db('friend_list')
+                .whereRaw(`where sender_id=${context.user.id} or recieved_id=${context.user.id}`)
+                .andWhere('request_status', 'pending')
+                .andWhere('id', request_id)
+1
+                if (requestCheck)
+                {
+                    const updatedList = await db('friend_list')
+                    .where('id', request_id)
+                    .update({
+                        request_status: choice
+                    })
+                    .returning('*')
+                    
+                    if (updatedList)
+                    {
+                        return ('updated request status')
+                    }
+                    else
+                    {
+                        return ('failed to updated request status :(')
+                    }
+                }
+                else
+                {
+                    return ("failed to find your request :(")
+                }
+            }
+        },
+
+        UpdateGroupListViewStatus: async (parent, args, context) => {
             if (context.user)
             {
                 if (SharedListCheck(context.user.id, context.user.id, args.group_list_id))
                 {
+                    const updateList = await db('group_list')
+                    .where('id', args.group_list_id)
+                    .andWhere('user_id', context.user.id)
+                    .update({
+                        view_status: args.choice
+                    })
 
+                    if (updateList)
+                    {
+                        return ("successfully updated list")
+                    }
+                    else
+                    {
+                        return ('failed to update list')
+                    }
                 }
             }
         }

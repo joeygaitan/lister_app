@@ -1,24 +1,8 @@
 const db = require('../db/knex')
 const { tryCatcher } = require('./errorHandling');
 
-async function GetPersonalLists (user_id)
+async function GetFriendSharedLists(user_id)
 {
-    // finds any of your personal lists
-    const [personal_group_lists, error] = await tryCatcher(db('group_list as gl')
-    .select(
-        'u.username',
-        'u.id as user_id',
-        'gl.id', 
-        'gl.name', 
-        'gl.bio', 
-        'gl.view_status'
-    )
-    .innerJoin('user as u', 'u.id', 'gl.user_id')
-    .where('user_id', user_id)
-    .returning("*"), "failed to find personal user projects")
-
-    // Filters out any lists that you're blocked from, and any lists you're added too. 
-    // You can only follow public lists and can only be invited to follow private lists.
     let [other_group_lists, otherGroupListError] = await tryCatcher(db('user_group_list')
     .where('user_id', user_id)
     .whereNot('admin_level', '=', 'blocked')
@@ -33,11 +17,6 @@ async function GetPersonalLists (user_id)
         idList.push(group_id['group_list_id'])
     })
 
-    //     id:ID
-    //     user_id: ID
-    //     name: String
-    //     bio: String
-    //     private: Boolean
     const [shared_lists, sharedListErrors] = await tryCatcher(db('group_list as gl')
     .select(
         'u.username',
@@ -51,10 +30,56 @@ async function GetPersonalLists (user_id)
     .whereIn('gl.id', idList)
     .returning('*'), 'failed')
 
-    // return the sum of each and spread all of their content into a single list.
-    const group_lists = [...personal_group_lists, ...shared_lists];
-    
-    return group_lists;
+    return shared_lists
+}
+
+// friend
+async function GetPersonalLists (user_id, friend = false)
+{
+    // finds any of your personal lists
+    if (friend)
+    {
+        const [personal_group_lists, error] = await tryCatcher(db('group_list as gl')
+        .select(
+            'u.username',
+            'u.id as user_id',
+            'gl.id', 
+            'gl.name', 
+            'gl.bio', 
+            'gl.view_status'
+        )
+        .innerJoin('user as u', 'u.id', 'gl.user_id')
+        .where('user_id', user_id)
+        .where('view_status', 'public')
+        .returning("*"), "failed to find personal user projects")
+
+        let shared_lists = await GetFriendSharedLists(user_id)
+
+        const group_lists = [...personal_group_lists, ...shared_lists];
+
+        return group_lists
+    }
+    else 
+    {
+        const [personal_group_lists, error] = await tryCatcher(db('group_list as gl')
+        .select(
+            'u.username',
+            'u.id as user_id',
+            'gl.id', 
+            'gl.name', 
+            'gl.bio', 
+            'gl.view_status'
+        )
+        .innerJoin('user as u', 'u.id', 'gl.user_id')
+        .where('user_id', user_id)
+        .returning("*"), "failed to find personal user projects")
+
+        let shared_lists = await GetFriendSharedLists(user_id)
+
+        const group_lists = [...personal_group_lists, ...shared_lists];
+        
+        return group_lists
+    }
 }
 
 async function GetPersonalList (group_list_id, user_id)
