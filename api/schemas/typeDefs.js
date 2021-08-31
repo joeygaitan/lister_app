@@ -158,8 +158,9 @@ const typeDefs = gql`
         AddGroupListElement(group_list_element_id: ID, group_list_id: ID!, input: Input_Group_list_element!): Group_List_Element
 
         AddFriend(user_id: ID!): String!
-        UpdateFriendRequest(user_id: ID!): String!
-        ArchiveGroupList(group_list_id: ID!): String!
+        UpdateFriendRequest(request_id: ID!, choice: String!): String!
+
+        UpdateGroupListViewStatus(group_list_id: ID!, choice: String!): String!
     }
 `;
 
