@@ -43,6 +43,16 @@ const typeDefs = gql`
         private: Boolean
     }
 
+    type Group_User
+    {
+        username: String!
+    }
+
+    type Group_Users
+    {
+        group_list: [Group_list]
+    }
+
     type list
     {
         id:ID
@@ -85,6 +95,7 @@ const typeDefs = gql`
         GetSelf: User
         GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
+        GetGroupListUsers(id: ID!):
     } 
 
     type Mutation {

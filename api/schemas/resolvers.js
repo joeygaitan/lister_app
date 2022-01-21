@@ -33,9 +33,12 @@ const resolvers = {
         GetGroupList: async function (parent, {id}, context) {
             if (context.user)
             {
+                // get all group lists that correspond by id
                 const group_lists = await GetPersonalLists(context.user.id)
 
-                list = group_lists.find(element => element.id == id)
+                // look for selected group list
+                list = group_lists.find(element => element.id == id)/
+                console.log(list)
 
                 if (list)
                 {
@@ -54,6 +57,13 @@ const resolvers = {
                 {
                     console.log('failed to find a list :(');
                 }
+            }
+        },
+        GetGroupListUsers: async function (parent, {id}, context)
+        {
+            if (context.user)
+            {
+                db('user_group_list').where('group_list_id', id)
             }
         }
     },

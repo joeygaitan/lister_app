@@ -21,5 +21,5 @@ const comparePassword = async (username, password) => {
 
 console.log(passwordHasher("1234"))
 
-// module.exports = { passwordHasher, comparePassword };
+module.exports = { passwordHasher, comparePassword };
 
