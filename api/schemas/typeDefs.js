@@ -150,9 +150,6 @@ const typeDefs = gql`
         GetSelf: User
         GetGroupList(id:ID!): list
         GetGroupsLists: [Group_list]
-<<<<<<< HEAD
-        GetGroupListUsers(id: ID!):
-=======
         
         GetSharedUserList(group_list_id: ID!): [User_Group_list]
 
@@ -165,7 +162,6 @@ const typeDefs = gql`
         
         GetPendingFriendRequests: [Friend_Request]
         GetFriends: [Friend]
->>>>>>> d652005c9fe84a1a6373755efcb5f7b59110b3ac
     } 
 
     type Mutation {
