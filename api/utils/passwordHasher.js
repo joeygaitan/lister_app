@@ -19,7 +19,7 @@ const comparePassword = async (username, password) => {
     return check;
 }
 
-console.log(passwordHasher("1234"))
+// console.log(passwordHasher("1234"))
 
 module.exports = { passwordHasher, comparePassword };
 

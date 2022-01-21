@@ -7,7 +7,7 @@ const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require("./schemas")
 const { Authenticate } = require('./utils/authentication')
 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 5000;
 const app = express();
 
 const server = new ApolloServer({
@@ -23,7 +23,17 @@ app.use(bodyParser.urlencoded({
   }));
 app.use(morgan('dev'))
 
+
 app.use('/', express.static('public'))
+
+// if (process.env.NODE_ENV === 'production')
+// {
+//     app.use(express.static(path.join(__dirname, '../frontend/build')))
+// }
+
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend/build/index.html'))
+// })
 
 app.listen(port, () => {
     console.log(`Server started on port ${port} :)`);
