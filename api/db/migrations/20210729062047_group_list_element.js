@@ -9,6 +9,7 @@ exports.up = function(knex) {
         table.string('name')
         table.string('bio')
         table.timestamps(true,true);
+        table.enu('view_status', ['public', 'private', 'archived']).defaultTo('public')
     })
 };
 

@@ -15,8 +15,8 @@
 # In progress
 # work on modifying a group list page
 # work on deleteing a post element
-# work on adding a friend (make sure friend didn't invite you already, and you didn't invite them first)
 
 # Complete
 # work on add one mutation updating by optional id mechanic [X]
 # work on modifying users access for list sharing [X]
+# work on adding a friend (make sure friend didn't invite you already, and you didn't invite them first)

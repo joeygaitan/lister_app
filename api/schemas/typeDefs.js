@@ -141,6 +141,21 @@ const typeDefs = gql`
         bio: String
     }
 
+    input Input_Modify_Group_list
+    {
+        name: String
+        bio: String
+        view_status: View_Status
+    }
+
+    input Input_Modify_Group_list_element
+    {
+        name: String!
+        url: String
+        bio: String
+        view_status: View_Status
+    }
+
     type Auth {
         token: ID!
         user: User
@@ -172,7 +187,10 @@ const typeDefs = gql`
         InviteTooFollowList(admin_level: String!, group_list_id: ID!, user_id: ID!): String
 
         UpdateRecievedInviteStatus(choice: Boolean!, id: ID!): list
-        UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String 
+        UpdateUserListAccess(choice: String!, user_id: ID!, group_list_id: ID!): String
+
+        UpdateGroupList(input: Input_Modify_Group_list!): String!
+        UpdateGroupListElement(input: Input_Modify_Group_list_element!): String!
 
         AddGroupList(group_list_id: ID, input: Input_Group_list!): Group_list
         AddGroupListElement(group_list_element_id: ID, group_list_id: ID!, input: Input_Group_list_element!): Group_List_Element

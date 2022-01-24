@@ -626,6 +626,18 @@ const resolvers = {
                     }
                 }
             }
+        },
+        UpdateGroupList: async (parent, args, context) => {
+            if (context.user)
+            {
+                
+            }
+        },
+        UpdateGroupListElement: async (parent, args, context) => {
+            if (context.user)
+            {
+
+            }
         }
     }
 }
