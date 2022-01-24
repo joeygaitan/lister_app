@@ -6,7 +6,8 @@ exports.seed = function(knex) {
       return knex('user_group_list').insert([
         { user_id: 2, group_list_id: 2 },
         { user_id: 3, group_list_id: 2 },
-        { user_id: 2, group_list_id: 3 }
+        { user_id: 2, group_list_id: 3 },
+        { user_id: 1, group_list_id: 4 }
       ]);
     });
 };

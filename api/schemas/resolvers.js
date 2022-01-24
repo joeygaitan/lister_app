@@ -4,7 +4,6 @@ const { AuthenticationError } = require('apollo-server-express');
 const { CreateToken } = require('../utils/authentication')
 const { tryCatcher } = require("../utils/errorHandling")
 const { GetPersonalLists, GetPersonalList, SharedListCheck, GetSharedLists, GetSharedList } = require('../utils/database_requests');
-const { request } = require("express");
 
 const resolvers = {
     Query: {
@@ -38,14 +37,14 @@ const resolvers = {
                 const group_lists = await GetPersonalLists(context.user.id)
 
                 // look for selected group list
-                list = group_lists.find(element => element.id == id)/
-                console.log(list)
+                list = group_lists.find(element => element.id == id)
+                
 
                 if (list)
                 {
                     const list_elements = await GetPersonalList(list.id, list.user_id)   
 
-                    
+                    console.log(list_elements)
                     if (list_elements)
                     {
                         return list_elements;
@@ -536,14 +535,17 @@ const resolvers = {
         },
 
         AddFriend: async (parent, { user_id }, context) => {
+            // checks that you're logged
             if (context.user)
             {
+                // checks that you're not trying to add yourself.
                 if (context.user.id != user_id)
                 {
                     const checkForDuplicates = await db('friend_list')
-                    whereRaw(`where sender_id=${context.user.id} and recieved_id=${user_id} or sender_id=${user_id} and recieved_id=${context.user.id}`)
-
-                    if (!checkForDuplicates)
+                    .whereRaw(`sender_id=${context.user.id} and recieved_id=${user_id} or sender_id=${user_id} and recieved_id=${context.user.id}`)
+                    // checks for duplicate friend requests
+                    console.log(checkForDuplicates.length)
+                    if (checkForDuplicates.length === 0)
                     {
                         const newInvite = await db('friend_list')
                         .insert({
@@ -576,7 +578,7 @@ const resolvers = {
                 .whereRaw(`where sender_id=${context.user.id} or recieved_id=${context.user.id}`)
                 .andWhere('request_status', 'pending')
                 .andWhere('id', request_id)
-1
+
                 if (requestCheck)
                 {
                     const updatedList = await db('friend_list')

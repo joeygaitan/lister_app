@@ -6,7 +6,8 @@ exports.seed = function(knex) {
       return knex('group_list').insert([
         { user_id: 1, name:"airsoft gear", view_status: "private" },
         { user_id: 1, name:"homework" },
-        { user_id: 1, name:"adventures" }
+        { user_id: 1, name:"adventures" },
+        { user_id: 2, name: "Shopping list"}
       ]);
     });
 };

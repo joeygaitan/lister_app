@@ -93,8 +93,8 @@ async function GetPersonalList (group_list_id, user_id)
         const list_elements = await db('group_list_element as gle')
         .select(
             'u.username', 
-            'u.id', 
-            'gle.id', 
+            'u.id as user_id', 
+            'gle.id',
             'gle.group_list_id', 
             'gle.name', 
             'gle.url', 
